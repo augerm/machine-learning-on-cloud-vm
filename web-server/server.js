@@ -2,6 +2,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const express = require('express');
 const path = require('path');
+const {spawn} = require("child_process");
 
 const app = express();
 const server = http.createServer(app);
@@ -16,11 +17,22 @@ const state = {
 app.use(express.static('public'));
 app.get('/', (req, res) => res.send(`Server running on port ${PORT}`));
 app.get('/train', (req, res) => {
+  console.log("Got request", req.query.data);
   state.query = req.query;
+  const pythonScript = path.join(__dirname, '../', 'NeuralNet', 'main.py');
+  const outDir = path.join(__dirname, 'data');
+  const pythonProcess = spawn('python3', [pythonScript, `--csv=${req.query.data}`, `--out_dir=${outDir}`]);
+  pythonProcess.stdout.on('data', (data) => {
+    console.log(`child stdout:\n${data}`);
+  });
+  pythonProcess.stderr.on('data', (data) => {
+    console.error(`child stderr:\n${data}`);
+  });
+  res.send("Training started successfully.").statusCode(200);
 });
 app.get('/status', (req, res) => {
   const responseText = "State: " + JSON.stringify(state);
-  res.send(responseText);
+  res.send(responseText).statusCode(200);
   // res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
