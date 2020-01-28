@@ -7,7 +7,9 @@ import os
 import pandas as pd
 import json
 
-from default_params import params
+from NeuralNet.default_params import params
+from system.system import System
+from gcloud.gcloud import GCloud
 from sklearn.model_selection import train_test_split
 
 class NeuralNet:
@@ -65,8 +67,15 @@ class NeuralNet:
     def save(self):
         out_dir = self.out_dir
         date_str = str(datetime.datetime.now().strftime("%d-%B-%Y-%I-%M%p")) + "-" + str(self.test_acc)
-        os.makedirs(os.path.join(out_dir, date_str))
-        self.model.save('{}/{}/model.h5'.format(out_dir, date_str))
+        package_dir = os.path.join(out_dir, date_str)
+        os.makedirs(package_dir)
+        
+        self.model.save(os.path.join(package_dir, 'model.h5'))
+        System.copy_file_to(self.csv, os.path.join(package_dir, 'data.csv'))
+        System.write_json_to_file({
+            'test_accuracy': str(self.test_acc),
+        }, os.path.join(package_dir, 'accuracy.json'))
+        GCloud.upload_directory_to_bucket(package_dir, 'test_bucket_12349876')
         # write_to_json(os.path.join(out_dir, date_str, 'data.csv'), Match.get_features_list())
         # write_to_json(os.path.join(keras_models_directory, date_str, 'params.json'), params)
         # write_to_json(os.path.join(keras_models_directory, date_str, 'accuracy.json'), { 'loss': str(test_loss_test), 'accuracy': str(test_acc_test) })
