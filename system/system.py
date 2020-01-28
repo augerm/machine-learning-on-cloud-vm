@@ -7,7 +7,7 @@ class System:
     def run_command(command):
         # https://stackoverflow.com/a/16710842g
         command_arr = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', command)
-        result = subprocess.check_output(command_arr).decode('utf-8')
+        result = subprocess.check_output(command_arr, shell=True).decode('utf-8')
         return result
     @staticmethod
     def copy_file_to(current_location, target_location):
