@@ -15,7 +15,9 @@ const state = {
 };
 
 app.use(express.static('public'));
-app.get('/', (req, res) => res.send(`Server running on port ${PORT}`));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html')).statusCode(200);
+});
 app.get('/train', (req, res) => {
   console.log("Got request", req.query.data);
   state.query = req.query;
@@ -33,7 +35,6 @@ app.get('/train', (req, res) => {
 app.get('/status', (req, res) => {
   const responseText = "State: " + JSON.stringify(state);
   res.send(responseText).statusCode(200);
-  // res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 webSocketServer.on('connection', function connection(ws) {

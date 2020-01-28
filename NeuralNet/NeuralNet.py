@@ -50,6 +50,7 @@ class NeuralNet:
         print('Results: loss {},   accuracy {},  :'.format(test_loss_test, test_acc_test))
         self.test_acc = test_acc_test
         self.model = model
+        self.save()
     
     def save(self):
         out_dir = self.out_dir
