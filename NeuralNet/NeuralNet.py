@@ -5,14 +5,24 @@ import datetime
 import random
 import os
 import pandas as pd
+import json
 
 from default_params import params
 from sklearn.model_selection import train_test_split
 
 class NeuralNet:
-    def __init__(self, csv, out_dir):
+    def __init__(self, csv, out_dir, param_file = None):
         self.out_dir = out_dir
         self.csv = csv
+        self.params = self.read_params(param_file)
+
+    def read_params(self, param_file):
+        if param_file is None:
+            p = params
+        else:
+            with open(param_file) as f:
+                p = json.load(f)
+        return p
 
     def train(self):
         df = pd.read_csv(self.csv, skiprows=1)
@@ -28,22 +38,22 @@ class NeuralNet:
         model = k.Sequential()
 
         input_layer = k.layers.Dense(len(train_x), input_dim=len(train_x[0]),
-                                                            activation=params['INPUT_LAYER']['ACTIVATION'])
+                                                            activation=self.params['INPUT_LAYER']['ACTIVATION'])
         model.add(input_layer)
 
-        for hidden_layer_data in params['HIDDEN_LAYERS']:
+        for hidden_layer_data in self.params['HIDDEN_LAYERS']:
             hidden_layer = k.layers.Dense(hidden_layer_data['NUM_NODES'],
                                                             activation=hidden_layer_data['ACTIVATION'])
             model.add(hidden_layer)
 
-        output_layer = k.layers.Dense(params['OUTPUT_LAYER']['NUM_NODES'],
-                                                                activation=params['OUTPUT_LAYER']['ACTIVATION'])
+        output_layer = k.layers.Dense(self.params['OUTPUT_LAYER']['NUM_NODES'],
+                                                                activation=self.params['OUTPUT_LAYER']['ACTIVATION'])
         model.add(output_layer)
 
         # optimizer - sgd, rmsprop
-        model.compile(loss=params['LOSS_FUNCTION'], optimizer=params['OPTIMIZER'], metrics=[metrics.binary_accuracy])
-        model.fit(np.array(train_x), np.array(train_y), validation_split=params['VALIDATION_SPLIT'],
-                epochs=params['EPOCHS'], batch_size=params['BATCH_SIZE'])
+        model.compile(loss=self.params['LOSS_FUNCTION'], optimizer=self.params['OPTIMIZER'], metrics=[metrics.binary_accuracy])
+        model.fit(np.array(train_x), np.array(train_y), validation_split=self.params['VALIDATION_SPLIT'],
+                epochs=self.params['EPOCHS'], batch_size=self.params['BATCH_SIZE'])
 
         test_loss_test, test_acc_test = model.evaluate(test_x, test_y)
 
